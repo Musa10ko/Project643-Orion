@@ -1,26 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+@import "tailwindcss";
 @layer base {
   :root {
-    --background: 10 10 10;
-  }
+    --tst: bottom 0.5s ease 0s;
+    --dark: #E6E6E6EE;
+}
 }
 
 body {
-  background: rgb(10 10 10);
-  color: white;
-  font-family: system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .no-scrollbar::-webkit-scrollbar {
     display: none;
-}
-
-:root {
-    --tst: bottom 0.5s ease 0s;
-    --dark: #E6E6E6EE;
 }
 
 .no-scrollbar {

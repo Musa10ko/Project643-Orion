@@ -1,8 +1,7 @@
-// app/components/game/ClueGrid.tsx
 "use client";
 
-import { motion } from "framer-motion";
-import { iconSlots, type IconSlot } from "../../../src/data/iconSlots";
+import React, { useEffect, useRef, useMemo } from "react";
+import { ICON_MATRIX } from "../../../src/data/iconSlots";
 import { patterns } from "../../../src/data/patterns";
 
 interface ClueGridProps {
@@ -10,79 +9,115 @@ interface ClueGridProps {
 }
 
 export default function ClueGrid({ day }: ClueGridProps) {
-  const typeCount = day === 1 ? 4 : day === 2 ? 3 : day === 3 ? 2 : 1;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // 1. Покращений Shuffle Algorithm (VRF style)
+  // Генеруємо стабільну сітку для поточного дня
+  const gridData = useMemo(() => {
+    const typeCount = day === 1 ? 4 : day === 2 ? 3 : day === 3 ? 2 : 1;
+    const allPatterns = Object.values(patterns);
+    // Вибираємо типи іконок (перша завжди "правильна")
+    const activeTypes = allPatterns.slice(0, typeCount);
+
+    return ICON_MATRIX.map((point, index) => ({
+      point,
+      // Рівномірний розподіл + невеликий зсув для асиметрії
+      src: activeTypes[(index + day) % activeTypes.length],
+      // Індивідуальний коефіцієнт блюру для цієї позиції
+      blurSeed: Math.random()
+    }));
+  }, [day]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    canvas.width = 600;
+    canvas.height = 600;
+
+    // Кеш для зображень, щоб не моргали при перемальовуванні
+    const images: HTMLImageElement[] = gridData.map(item => {
+      const img = new Image();
+      img.src = item.src;
+      return img;
+    });
+
+    let animationFrameId: number;
+
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      gridData.forEach((item, index) => {
+        const { point, blurSeed } = item;
+        const img = images[index];
+
+        if (!img.complete) return;
+
+        ctx.save();
+
+        // --- ЛОГІКА GLITCH (Тільки для Пн-Чт) ---
+        const isGlitchStep = day < 5 && Math.random() > 0.96; // Шанс стрибка 4%
+        const glitchX = isGlitchStep ? (Math.random() - 0.5) * 15 : 0;
+        
+        // --- ЛОГІКА ВИКРИВЛЕННЯ (Skew) ---
+        const distortion = day < 5 ? (5 - day) * 0.12 : 0;
+        // Використовуємо ваші координати tx+50, ty+50
+        ctx.setTransform(1, Math.random() * distortion, Math.random() * distortion, 1, point.tx + 50 + glitchX, point.ty + 50);
+
+        // --- ЛОГІКА FROSTED BLUR ---
+        const baseBlur = Math.max(0, (5 - day) * 2.2);
+        const individualBlur = baseBlur * (0.5 + blurSeed); // Кожна іконка блюриться по-своєму
+        ctx.filter = `blur(${individualBlur}px) saturate(${1.5 + day * 0.6})`;
+
+        // --- МАЛЮВАННЯ RGB SPLIT (Glitch effect) ---
+        if (isGlitchStep && day < 4) {
+          ctx.globalCompositeOperation = "screen";
+          // Червоний канал з відхиленням
+          ctx.shadowColor = "red";
+          ctx.shadowBlur = 5;
+          ctx.drawImage(img, -point.width / 2 - 3, -point.height / 2, point.width * 2.3, point.height * 2.3);
+          
+          // Синій канал з відхиленням
+          ctx.shadowColor = "cyan";
+          ctx.drawImage(img, -point.width / 2 + 3, -point.height / 2, point.width * 2.3, point.height * 2.3);
+        } else {
+          // Звичайне малювання
+          ctx.drawImage(img, -point.width / 2, -point.height / 2, point.width * 2.2, point.height * 2.2);
+        }
+
+        ctx.restore();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [day, gridData]);
 
   return (
-    <div className="relative w-[300px] h-[300px] mx-auto overflow-hidden">
-      {/* Rive Vortex (центр) */}
-      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        <div className="text-[220px] opacity-20 scale-110">🌪️</div>
+    
+    <div className="relative w-full h-full mx-auto group">
+      {/* Контейнер з легким шумом для "старого ТБ" */}
+      <div className={`
+        w-full h-full overflow-hidden transition-all duration-500
+        ${day === 1 ? 'shadow-[0_0_20px_rgba(255,255,255,0.1)]' : ''}
+      `}>
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full object-contain filter drop-shadow-md"
+        />
+        
+        {/* Додатковий шар Frosted Glass через Tailwind */}
+        {day < 5 && (
+          <div 
+            className="absolute inset-0 pointer-events-none bg-white/5"
+            style={{ backdropFilter: `contrast(1.1) brightness(${1.1 - day*0.02})` }}
+          />
+        )}
       </div>
-
-      {iconSlots.map((slot) => {
-        const patternIndex = (slot.id % typeCount) + 1;
-        const patternSrc = patterns[patternIndex as keyof typeof patterns];
-
-        const config = {
-          1: { blur: 2.6, saturate: 5.0, distort: 15, noise: 0.45 },
-          2: { blur: 2.0, saturate: 4.0, distort: 10, noise: 0.28 },
-          3: { blur: 1.2, saturate: 2.5, distort: 5,  noise: 0.16 },
-          4: { blur: 0.5, saturate: 1.5, distort: 2,  noise: 0.06 },
-          5: { blur: 0.0, saturate: 1.0, distort: 0,  noise: 0.00 },
-        }[day];
-
-        return (
-          <motion.div
-            key={slot.id}
-            className="absolute flex items-center justify-center"
-            style={{
-              left: `${slot.x}px`,
-              top: `${slot.y}px`,
-              width: "52px",
-              height: "52px",
-              transform: `scale(${slot.scale}) rotate(${slot.rotation}deg)`,
-            }}
-            initial={{ opacity: 0.4 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.1, delay: slot.id * 0.012 }}
-          >
-            <img
-              src={patternSrc}
-              alt=""
-              className="w-full h-full object-contain drop-shadow-2xl"
-              style={{
-                filter: `blur(${config.blur}px) saturate(${config.saturate}) contrast(1.15)`,
-              }}
-            />
-
-            {/* Glitch RGB Split */}
-            {day < 5 && (
-              <>
-                <div
-                  className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl mix-blend-screen"
-                  style={{
-                    backgroundImage: `url(${patternSrc})`,
-                    left: `-${config.distort}px`,
-                    filter: "drop-shadow(2px 0 #ff0088)",
-                    animation: "glitch 0.25s infinite alternate",
-                    opacity: 0.4,
-                  }}
-                />
-                <div
-                  className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl mix-blend-screen"
-                  style={{
-                    backgroundImage: `url(${patternSrc})`,
-                    left: `${config.distort}px`,
-                    filter: "drop-shadow(-2px 0 #00ffff)",
-                    animation: "glitch 0.35s infinite alternate",
-                    opacity: 0.35,
-                  }}
-                />
-              </>
-            )}
-          </motion.div>
-        );
-      })}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
 export default function GameArena() {
-  const [currentDay] = useState(3);
+  const [currentDay] = useState(5);
 
   return (
     <div className="space-y-8 px-4">
