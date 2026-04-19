@@ -113,7 +113,7 @@ export default function ClueGrid({ day }: ClueGridProps) {
         {/* Додатковий шар Frosted Glass через Tailwind */}
         {day < 5 && (
           <div 
-            className="absolute inset-0 pointer-events-none bg-white/5"
+            className="absolute inset-0 pointer-events-none"
             style={{ backdropFilter: `contrast(1.1) brightness(${1.1 - day*0.02})` }}
           />
         )}

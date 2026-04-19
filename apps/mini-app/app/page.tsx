@@ -134,6 +134,33 @@ export default function HomePage() {
                 </div>
               </div>
             </SwiperSlide>
+            <SwiperSlide>
+              <div className="glass-card rounded-3xl p-2 mx-auto w-64">
+                <img src="https://i.ibb.co/xK2JPRZD/rebit.gif" alt="Jelly Bunnies" className="w-52 h-52 object-contain mx-auto" />
+                <div className="text-center mt-3">
+                  <p className="text-sm font-bold">Jelly Bunnies</p>
+                  <p className="text-xs text-gray-400">Meat Jelly • 9</p>
+                </div>
+              </div>
+            </SwiperSlide>
+            <SwiperSlide>
+              <div className="glass-card rounded-3xl p-2 mx-auto w-64">
+                <img src="https://i.ibb.co/xK2JPRZD/rebit.gif" alt="Jelly Bunnies" className="w-52 h-52 object-contain mx-auto" />
+                <div className="text-center mt-3">
+                  <p className="text-sm font-bold">Jelly Bunnies</p>
+                  <p className="text-xs text-gray-400">Meat Jelly • 9</p>
+                </div>
+              </div>
+            </SwiperSlide>
+            <SwiperSlide>
+              <div className="glass-card rounded-3xl p-2 mx-auto w-64">
+                <img src="https://i.ibb.co/xK2JPRZD/rebit.gif" alt="Jelly Bunnies" className="w-52 h-52 object-contain mx-auto" />
+                <div className="text-center mt-3">
+                  <p className="text-sm font-bold">Jelly Bunnies</p>
+                  <p className="text-xs text-gray-400">Meat Jelly • 9</p>
+                </div>
+              </div>
+            </SwiperSlide>
           </Swiper>
 
           {/* Vote Button + Stats */}
